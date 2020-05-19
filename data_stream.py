@@ -34,8 +34,7 @@ def run_spark_job(spark):
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("subscribe", "com.police.service.calls") \
         .option("startingOffsets", "earliest") \
-        .option("maxRatePerPartition", 100) \
-        .option("maxOffsetPerTrigger", 100) \
+        .option("maxOffsetPerTrigger", 200) \
         .option("stopGracefullyOnShutdown", "true") \
         .load()
 
@@ -79,16 +78,16 @@ def run_spark_job(spark):
     # #
     # # # TODO Q1. Submit a screen shot of a batch ingestion of the aggregation
     # # # TODO write output stream
-    query = agg_df \
-        .writeStream \
-        .outputMode("complete") \
-        .format("console") \
-        .start()
+    # query = agg_df \
+    #     .writeStream \
+    #     .outputMode("complete") \
+    #     .format("console") \
+    #     .start()
+    # # # #
+    # # # #
+    # # # # # TODO attach a ProgressReporter
+    # query.awaitTermination()
     # # #
-    # # #
-    # # # # TODO attach a ProgressReporter
-    query.awaitTermination()
-    # #
     # # TODO get the right radio code json path
     radio_code_json_filepath = "radio_code.json"
     radio_code_df = spark.read.json(radio_code_json_filepath, multiLine=True)
@@ -106,6 +105,7 @@ def run_spark_job(spark):
     # # TODO join on disposition column
     join_query = agg_df.join(radio_code_df, "disposition") \
         .writeStream \
+        .outputMode("append") \
         .format("console") \
         .queryName("join") \
         .start()
